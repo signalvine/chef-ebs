@@ -1,8 +1,8 @@
 node[:ebs][:volumes].each do |mount_point, options|
-  
+
   # skip volumes that already exist
   next if File.read('/etc/mtab').split("\n").any?{|line| line.match(" #{mount_point} ")}
-  
+
   # create ebs volume
   if !options[:device] && options[:size]
     if node[:ebs][:creds][:encrypted]
@@ -55,7 +55,7 @@ node[:ebs][:volumes].each do |mount_point, options|
 
   case node[:platform]
   when 'amazon'
-    default_mount_options = 'noatime'  
+    default_mount_options = 'noatime'
   else
     default_mount_options = 'noatime,nobootwait'
   end
@@ -68,4 +68,9 @@ node[:ebs][:volumes].each do |mount_point, options|
     action [:mount, :enable]
   end
 
+  replace_or_add mount_point do
+    path '/etc/fstab'
+    pattern "^#{device}"
+    line "#{device}\t#{mount_point}\t#{options[:fstype]}\t#{mount_options}\t0 0"
+  end
 end
